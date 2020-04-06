@@ -79,7 +79,7 @@ def load_12ECG_model():
     models = dict()
     for fold in range(4):
         for class_name in MODEL_CLASSES:
-            state_dict = torch.load('{}submit1_{}_{}.pt'.format(MODEL_FOLDER, class_name, fold))
+            state_dict = torch.load('{}submit1_{}_{}.pt'.format(MODEL_FOLDER, class_name, fold), map_location=torch.device('cpu'))
             net = model.PhyChal2020Net()
             net.load_state_dict(state_dict)
             models[(fold, class_name)] = net
