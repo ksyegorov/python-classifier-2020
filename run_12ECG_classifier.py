@@ -8,6 +8,40 @@ import model
 MODEL_CLASSES = ['AF', 'I-AVB', 'LBBB', 'PAC', 'PVC', 'RBBB', 'STD', 'STE']
 MODEL_FOLDER = 'models/'
 
+THRESHOLDS = {(0, 'AF'): -1.23,
+     (0, 'I-AVB'): 0.12,
+     (0, 'LBBB'): 0.15,
+     (0, 'PAC'): -1.17,
+     (0, 'PVC'): -1.48,
+     (0, 'RBBB'): -0.71,
+     (0, 'STD'): -1.06,
+     (0, 'STE'): -1.51,
+     (1, 'AF'): -1.88,
+     (1, 'I-AVB'): -0.96,
+     (1, 'LBBB'): -2.67,
+     (1, 'PAC'): -2.03,
+     (1, 'PVC'): -1.27,
+     (1, 'RBBB'): -1.34,
+     (1, 'STD'): -1.97,
+     (1, 'STE'): -0.61,
+     (2, 'AF'): -0.03,
+     (2, 'I-AVB'): -1.88,
+     (2, 'LBBB'): -1.03,
+     (2, 'PAC'): -2.26,
+     (2, 'PVC'): -0.17,
+     (2, 'RBBB'): -1.22,
+     (2, 'STD'): -0.72,
+     (2, 'STE'): -1.16,
+     (3, 'AF'): -1.37,
+     (3, 'I-AVB'): -2.78,
+     (3, 'LBBB'): -0.17,
+     (3, 'PAC'): -1.46,
+     (3, 'PVC'): -0.99,
+     (3, 'RBBB'): -0.66,
+     (3, 'STD'): -1.45,
+     (3, 'STE'): -0.49}
+
+
 
 def filter_signal(ts, rate, low_freq=None, high_freq=None, order=4):
     if low_freq:
@@ -54,8 +88,9 @@ def run_12ECG_classifier(data, header_data, classes, models):
             net = models[(fold, class_name)]
             net.eval()
             logit = net(torch_data).detach().cpu().numpy()[0, class_index]
+            prediction = logit > THRESHOLDS[(fold, class_name)]
             probability = sigmoid(logit)
-            prediction = probability > 0.5
+            
             
             probs.append(probability)
             preds.append(prediction)
@@ -79,7 +114,7 @@ def load_12ECG_model():
     models = dict()
     for fold in range(4):
         for class_name in MODEL_CLASSES:
-            state_dict = torch.load('{}submit1_{}_{}.pt'.format(MODEL_FOLDER, class_name, fold))
+            state_dict = torch.load('{}submit1_{}_{}.pt'.format(MODEL_FOLDER, class_name, fold), map_location=torch.device('cpu'))
             net = model.PhyChal2020Net()
             net.load_state_dict(state_dict)
             models[(fold, class_name)] = net
